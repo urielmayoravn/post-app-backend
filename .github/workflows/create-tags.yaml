@@ -9,10 +9,6 @@ permissions:
   id-token: write
   contents: read
 
-env:
-  AWS_REGION: MY_AWS_REGION
-  ECR_REPOSITORY: MY_ECR_REPOSITORY
-
 jobs:
   login-to-amazon-ecr:
     runs-on: ubuntu-latest
