@@ -18,11 +18,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.get("/health", async (req, res) => {
+app.get("/api/health", async (req, res) => {
   res.status(200).send("Healthy");
 });
 
-app.get("/posts", async (req, res) => {
+app.get("/api/posts", async (req, res) => {
   try {
     const allPosts = await db.select().from(posts);
     res.json(allPosts);
@@ -31,7 +31,7 @@ app.get("/posts", async (req, res) => {
   }
 });
 
-app.get("/posts/:id", async (req, res) => {
+app.get("/api/posts/:id", async (req, res) => {
   try {
     const postId = parseInt(req.params.id);
     const post = await db.select().from(posts).where(eq(posts.id, postId));
@@ -46,7 +46,7 @@ app.get("/posts/:id", async (req, res) => {
   }
 });
 
-app.post("/posts", async (req, res) => {
+app.post("/api/posts", async (req, res) => {
   try {
     const { title, is_completed } = req.body;
 
@@ -68,7 +68,7 @@ app.post("/posts", async (req, res) => {
   }
 });
 
-app.patch("/posts/:id", async (req, res) => {
+app.patch("/api/posts/:id", async (req, res) => {
   try {
     const postId = parseInt(req.params.id);
     const { is_completed } = req.body;
@@ -93,7 +93,7 @@ app.patch("/posts/:id", async (req, res) => {
   }
 });
 
-app.delete("/posts/:id", async (req, res) => {
+app.delete("/api/posts/:id", async (req, res) => {
   try {
     const postId = parseInt(req.params.id);
 
