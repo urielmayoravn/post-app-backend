@@ -58,6 +58,6 @@ jobs:
           REGISTRY: ${{needs.login-to-amazon-ecr.outputs.registry }}
         run: |
           TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition be-task)
-          NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "$REGISTRY:$IMAGE_TAG" '.taskDefinition.containerDefinitions[0].image = $IMAGE' | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) |  del(.registeredAt)  | del(.registeredBy)')
+          NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "$REGISTRY:$IMAGE_TAG" '.taskDefinition | .containerDefinitions[0].image = $IMAGE | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) |  del(.registeredAt)  | del(.registeredBy)')
           aws ecs register-task-definition --cli-input-json $NEW_TASK_DEFINITION
           aws ecs update-service --cluster fullstack-app --service backend --task-definition be-task --force-new-deployment
