@@ -11,21 +11,7 @@ phases:
       - apt-get update -y
       - apt-get install postgresql -y
 
-build:
+  build:
     commands:
-      - echo "Iniciando parseo de la cadena de conexión..."
-
-      # 1. PARSEAR EL HOST y PUERTO USANDO AWK
-      # Esta expresión compleja extrae 'host:port' ignorando el protocolo y las credenciales.
-      # Utiliza '@' y ':' como delimitadores.
-      - DB_HOST_PORT=$(echo "$DB_URL_FULL" | awk -F'[@/]' '{print $3}' | awk -F: '{print $1}')
-      - DB_PORT_ONLY=$(echo "$DB_URL_FULL" | awk -F'[@/]' '{print $3}' | awk -F: '{print $2}')
-      - DB_USER_ONLY=$(echo "$DB_URL_FULL" | awk -F'[:/]' '{print $4}')
-
-      # 4. EJECUCIÓN de pg_isready con los argumentos separados
-      - echo "Realizando health check..."
-      - pg_isready -h "$DB_HOST_PORT" -p "$DB_PORT_ONLY" -U "$DB_USER_ONLY" -t 5
-
-      # 5. Verificación
-      - if [ $? -ne 0 ]; then echo "❌ Database no está lista o es inalcanzable." ; exit 1; fi
-      - echo "✅ Database está lista y accesible."
+      - echo "Executing pg_isready to check if db is healthy"
+      - pg_isready -d $DB_URL
