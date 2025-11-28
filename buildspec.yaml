@@ -4,7 +4,7 @@ env:
   parameter-store:
     DB_URL: "/dev/database/connection_string"
 
-phasesphases:
+phases:
   build:
     commands:
       - echo "Executing pg_isready to check if db is healthy"
