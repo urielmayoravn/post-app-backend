@@ -1,3 +1,5 @@
+version: 0.2
+
 env:
   parameter-store:
     DB_URL: "/dev/database/connection_string"
