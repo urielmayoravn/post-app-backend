@@ -6,15 +6,15 @@ on:
       - "*"
 
 jobs:
-  check-db-is-healty:
-    runs-on:
-      - codebuild-fullstack-app-db-migration-${{ github.run_id }}-${{ github.run_attempt }}
-        buildspec-override:true
-
   login-to-amazon-ecr:
-    needs: check-db-is-healty
     runs-on: ubuntu-latest
     steps:
+      - name: Run codebuild
+        uses: aws-actions/aws-codebuild-run-build@v1
+        with:
+          project-name: fullstack-app-db-migration
+          buildspec-override: ./buildspec.yaml
+
       - name: checkout
         uses: actions/checkout@v5
 
