@@ -9,7 +9,7 @@ import "dotenv/config";
 const { Pool } = pkg;
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: `${process.env.DATABASE_URL}?sslmode=no-verify`,
 });
 
 const db = drizzle({ client: pool });
