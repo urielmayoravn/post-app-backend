@@ -33,29 +33,10 @@ jobs:
         run: |
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
-    outputs:
-      registry: ${{ steps.login-ecr.outputs.registry }}
-
-  update-image-tag-on-task-definition:
-    runs-on: ubuntu-latest
-    needs: login-to-amazon-ecr
-    steps:
-      - name: checkout
-        uses: actions/checkout@v5
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-west-2
-
-      - name: Set image tag
-        run: echo "IMAGE_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
       - name: Update task definition
         env:
-          REGISTRY: ${{needs.login-to-amazon-ecr.outputs.registry }}
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: fullstack-app/backend
         run: |
           TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition be-task)
