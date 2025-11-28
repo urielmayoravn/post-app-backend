@@ -5,6 +5,12 @@ env:
     DB_URL: "/dev/database/connection_string"
 
 phases:
+  install:
+    commands:
+      - echo "Instalando el cliente de PostgreSQL..."
+      - apt-get update
+      - apt-get install -y postgresql-client
+
   build:
     commands:
       - echo "Executing pg_isready to check if db is healthy"
