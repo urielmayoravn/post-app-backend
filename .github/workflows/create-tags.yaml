@@ -82,7 +82,6 @@ jobs:
         if: success()
         id: check-rollback
         run: |
-          echo "$TARGET_TD"
           CURRENT_TD=$(aws ecs describe-services --cluster ${{env.ECS_CLUSTER}} --services ${{env.ECS_SERVICE}} --query "services[0].taskDefinition")
           CURRENT_IMAGE=$(aws ecs describe-task-definition --task-definition $CURRENT_TD --query "taskDefinition.containerDefinitions[0].image")
 
