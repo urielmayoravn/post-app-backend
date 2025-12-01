@@ -5,8 +5,18 @@ on:
     tags:
       - "*"
 
+env:
+  AWS_REGION: us-west-2
+  CODEBUILD_PROJECT: fullstack-app-db-migration
+  BUILDSPEC_PATH: ./buildspec.yaml
+  ECR_REPOSITORY: fullstack-app/backend
+  ECS_TASK_DEF: be-task
+  ECS_CONTAINER: be-container
+  ECS_SERVICE: backend
+  ECS_CLUSTER: fullstack-app
+
 jobs:
-  login-to-amazon-ecr:
+  redeploy-backend-service:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -17,13 +27,13 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-west-2
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Run codebuild
         uses: aws-actions/aws-codebuild-run-build@v1
         with:
-          project-name: fullstack-app-db-migration
-          buildspec-override: ./buildspec.yaml
+          project-name: ${{ env.CODEBUILD_PROJECT }}
+          buildspec-override: ${{ env.BUILDSPEC_PATH }}
 
       - name: Login on AWS ECR
         id: login-ecr
@@ -36,14 +46,14 @@ jobs:
         id: image-push
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          REPOSITORY: fullstack-app/backend
         run: |
-          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
-          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
-          echo "image_uri=$REGISTRY/$REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          FULL_IMAGE_NAME="$REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker build -t FULL_IMAGE_NAME .
+          docker push FULL_IMAGE_NAME
+          echo "image_uri=FULL_IMAGE_NAME" >> $GITHUB_OUTPUT
 
       - name: Download current task definition JSON
-        run: aws ecs describe-task-definition --task-definition be-task --query taskDefinition > task-definition.json
+        run: aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEF }} --query taskDefinition > task-definition.json
 
       - name: Render task definition
         id: task-def
@@ -51,11 +61,11 @@ jobs:
         with:
           task-definition: task-definition.json
           image: ${{steps.image-push.outputs.image_uri}}
-          container-name: be-container
+          container-name: ${{ env.ECS_CONTAINER }}
 
       - name: Deploy to Amazon ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: backend
-          cluster: fullstack-app
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
