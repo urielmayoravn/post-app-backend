@@ -82,8 +82,8 @@ jobs:
         if: success()
         id: check-rollback
         run: |
-          CURRENT_TD=$(aws ecs describe-services --cluster ${{env.ECS_CLUSTER}} --services ${{env.ECS_SERVICE}} --query "services[0].taskDefinition")
-          CURRENT_IMAGE=$(aws ecs describe-task-definition --task-definition $CURRENT_TD --query "taskDefinition.containerDefinitions[0].image")
+          CURRENT_TD=$(aws ecs describe-services --cluster ${{env.ECS_CLUSTER}} --services ${{env.ECS_SERVICE}} --query "services[0].taskDefinition" --output text)
+          CURRENT_IMAGE=$(aws ecs describe-task-definition --task-definition $CURRENT_TD --query "taskDefinition.containerDefinitions[0].image" --output text)
 
           if [ ${{steps.image-push.outputs.image_uri}} == $CURRENT_IMAGE ]
           then
