@@ -69,3 +69,20 @@ jobs:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+      - name: Notify successfull deploy status
+        uses: rtCamp/action-slack-notify@v2
+        if: success()
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_TITLE: "DEPLOYMENT SUCCESSFULL"
+          SLACK_MESSAGE: "Backend service was deployed successfully"
+
+      - name: Notify successfull deploy status
+        uses: rtCamp/action-slack-notify@v2
+        if: ${{ always() && failure() }}
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_TITLE: "DEPLOYMENT STOPPED"
+          SLACK_MESSAGE: "Backend service was deployed with errors"
