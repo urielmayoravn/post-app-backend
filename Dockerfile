@@ -19,6 +19,6 @@ USER appuser
 COPY --from=deps /app ./
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx drizzle-kit push && node src/app.js"]
+CMD ["sh", "-c", "npx drizzle-kit push && node src/src/app.js"]
 
 # Revisar comandos mas avanzados de docker
