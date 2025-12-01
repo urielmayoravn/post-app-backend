@@ -33,19 +33,29 @@ jobs:
         run: echo "IMAGE_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
       - name: Build, tag, and push docker image to Amazon ECR
+        id: image-push
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: fullstack-app/backend
         run: |
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          echo "image_uri=$IMAGE_NAME" >> $GITHUB_OUTPUT
 
-      - name: Update task definition
-        env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          REPOSITORY: fullstack-app/backend
-        run: |
-          TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition be-task)
-          NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "$REGISTRY/$REPOSITORY:$IMAGE_TAG" '.taskDefinition | .containerDefinitions[0].image = $IMAGE | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) |  del(.registeredAt)  | del(.registeredBy)')
-          aws ecs register-task-definition --cli-input-json "$NEW_TASK_DEFINITION"
-          aws ecs update-service --cluster fullstack-app --service backend --task-definition be-task --force-new-deployment
+      - name: Download current task definition JSON
+        run: aws ecs describe-task-definition --task-definition be-task --query taskDefinition > task-definition.json
+
+      - name: Render task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          image: ${{steps.image-push.outputs.image_uri}}
+          container-name: be-container
+
+      - name: Deploy to Amazon ECS service
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: backend
+          cluster: fullstack-app
