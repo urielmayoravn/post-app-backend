@@ -78,7 +78,7 @@ jobs:
           SLACK_TITLE: "DEPLOYMENT SUCCESSFULL"
           SLACK_MESSAGE: "Backend service was deployed successfully"
 
-      - name: Notify successfull deploy status
+      - name: Notify unsuccessfull deploy status
         uses: rtCamp/action-slack-notify@v2
         if: ${{ always() && failure() }}
         env:
