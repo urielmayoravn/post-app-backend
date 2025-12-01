@@ -81,18 +81,16 @@ jobs:
       - name: Check if rollback occured
         if: success()
         id: check-rollback
-        env:
-          TARGET_TD: ${{steps.task-def.outputs.task-definition}}
         run: |
           echo "$TARGET_TD"
           CURRENT_TD=$(aws ecs describe-services --cluster ${{env.ECS_CLUSTER}} --services ${{env.ECS_SERVICE}} --query "services[0].taskDefinition")
-          echo "$CURRENT_TD"
+          CURRENT_IMAGE=$(aws ecs describe-task-definition --task-definition $CURRENT_TD --query "taskDefinition.containerDefinitions[0].image")
 
-          if [ "$TARGET_ID" == "$CURRENT_TD" ]
+          if [ ${{steps.image-push.outputs.image_uri}} == $CURRENT_IMAGE ]
           then
-            echo "is_rollback=1" >> $GITHUB_OUTPUT
-          else
             echo "is_rollback=0" >> $GITHUB_OUTPUT
+          else
+            echo "is_rollback=1" >> $GITHUB_OUTPUT
           fi
 
       - name: Notify successful deploy status
@@ -109,4 +107,4 @@ jobs:
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_TITLE: "DEPLOYMENT ROLLBACK"
-          SLACK_MESSAGE: "Backend service rollbacked"
+          SLACK_MESSAGE: "Backend service was rollbacked successfully"
