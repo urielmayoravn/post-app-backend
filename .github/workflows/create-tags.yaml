@@ -70,18 +70,43 @@ jobs:
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
 
-      - name: Notify successfull deploy status
-        uses: rtCamp/action-slack-notify@v2
-        if: success()
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_TITLE: "DEPLOYMENT SUCCESSFULL"
-          SLACK_MESSAGE: "Backend service was deployed successfully"
-
-      - name: Notify unsuccessfull deploy status
+      - name: Notify unsuccessful deploy status
         uses: rtCamp/action-slack-notify@v2
         if: ${{ always() && failure() }}
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_TITLE: "DEPLOYMENT STOPPED"
           SLACK_MESSAGE: "Backend service was deployed with errors"
+
+      - name: Check if rollback occured
+        if: success()
+        id: check-rollback
+        env:
+          TARGET_TD: ${{steps.task-def.outputs.task-definition}}
+        run: |
+          echo "$TARGET_TD"
+          CURRENT_TD=$(aws ecs describe-services --cluster ${{env.ECS_CLUSTER}} --services ${{env.ECS_SERVICE}} --query "services[0].taskDefinition")
+          echo "$CURRENT_TD"
+
+          if [ "$TARGET_ID" == "$CURRENT_TD" ]
+          then
+            echo "is_rollback=1" >> $GITHUB_OUTPUT
+          else
+            echo "is_rollback=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Notify successful deploy status
+        uses: rtCamp/action-slack-notify@v2
+        if: ${{ success() && steps.check-rollback.outputs.is_rollback == '0' }}
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_TITLE: "DEPLOYMENT SUCCESSFULL"
+          SLACK_MESSAGE: "Backend service was deployed successfully"
+
+      - name: Notify successful rollback deploy status
+        uses: rtCamp/action-slack-notify@v2
+        if: ${{ success() && steps.check-rollback.outputs.is_rollback == '1' }}
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_TITLE: "DEPLOYMENT ROLLBACK"
+          SLACK_MESSAGE: "Backend service rollbacked"
