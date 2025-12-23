@@ -9,6 +9,7 @@ phases:
     commands:
       - echo "Instalando el cliente de PostgreSQL..."
       - yum update -y
+      - sudo amazon-linux-extras enable postgresql15
       - yum install postgresql -y
 
   build:
