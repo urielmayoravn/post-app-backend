@@ -8,8 +8,8 @@ phases:
   install:
     commands:
       - echo "Instalando el cliente de PostgreSQL..."
-      - apt-get update -y
-      - apt-get install postgresql -y
+      - yum update -y
+      - yum install postgresql -y
 
   build:
     commands:
